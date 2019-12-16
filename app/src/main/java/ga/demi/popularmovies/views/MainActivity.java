@@ -79,7 +79,7 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
                     break;
                 }
             }
-        }
+        } else Toast.makeText(getBaseContext(), "Not content", Toast.LENGTH_LONG).show();
 
         return super.onOptionsItemSelected(item);
     }

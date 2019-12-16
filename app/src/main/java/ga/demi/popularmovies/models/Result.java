@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class Result implements Parcelable {
+public final class Result implements Parcelable {
 
     @SerializedName("popularity")
     @Expose
@@ -165,8 +165,12 @@ public class Result implements Parcelable {
         this.posterPath = posterPath;
     }
 
-    public Result(String title) {
-        this.title = title;
+    public Result(String title, String posterPath, String releaseDate, Double voteAverage, String overview) {
+        setTitle(title);
+        setPosterPath(posterPath);
+        setReleaseDate(releaseDate);
+        setVoteAverage(voteAverage);
+        setOverview(overview);
     }
 
     public static final Creator<Result> CREATOR = new Creator<Result>() {
@@ -174,7 +178,11 @@ public class Result implements Parcelable {
         @Override
         public Result createFromParcel(Parcel source) {
             String title = source.readString();
-            return new Result(title);
+            String posterPath = source.readString();
+            String releaseDate = source.readString();
+            Double voteAverage = source.readDouble();
+            String overview = source.readString();
+            return new Result(title, posterPath, releaseDate, voteAverage, overview);
         }
 
         @Override
@@ -190,6 +198,10 @@ public class Result implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(title);
+        parcel.writeString(getTitle());
+        parcel.writeString(getPosterPath());
+        parcel.writeString(getReleaseDate());
+        parcel.writeDouble(getVoteAverage());
+        parcel.writeString(getOverview());
     }
 }
