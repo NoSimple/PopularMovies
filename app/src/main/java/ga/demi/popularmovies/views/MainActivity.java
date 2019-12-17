@@ -11,10 +11,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import ga.demi.popularmovies.R;
@@ -30,6 +29,7 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
 
     private RecyclerView mMoviePostersRV;
     private ProgressBar mMoviePostersPB;
+    private TextView mErrorApiTV;
 
     private RequestToApiMovieDB mRequestToApiMovieDB;
     private List<Result> mMoviePosterList;
@@ -43,6 +43,8 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
 
         mMoviePostersRV = findViewById(R.id.rv_movie_posters);
         mMoviePostersPB = findViewById(R.id.pb_movie_posters);
+        mErrorApiTV = findViewById(R.id.tv_error_api_text);
+        mErrorApiTV.setText(getResources().getText(R.string.error_connection_text));
 
         mRequestToApiMovieDB = RequestToApiMovieDB.getInstanceRequestToApi();
 
@@ -50,7 +52,7 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
         mMoviePostersRV.setLayoutManager(layoutManager);
         mMoviePostersRV.setHasFixedSize(true);
 
-        getRequestApi();
+        getMoviesPopularRequestApi();
     }
 
     @Override
@@ -61,25 +63,16 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        if (mMoviePosterList != null) {
-            switch (item.getItemId()) {
-                case (R.id.most_popular_search): {
-                    Comparator<Result> mostPopularComparator =
-                            (result1, result2) -> result2.getPopularity().compareTo(result1.getPopularity());
-                    Collections.sort(mMoviePosterList, mostPopularComparator);
-                    onPostExecute(mMoviePosterList);
-                    break;
-                }
-                case (R.id.highest_rated_search): {
-                    Comparator<Result> highestRatedComparator =
-                            (result1, result2) -> result2.getVoteAverage().compareTo(result1.getVoteAverage());
-                    Collections.sort(mMoviePosterList, highestRatedComparator);
-                    onPostExecute(mMoviePosterList);
-                    break;
-                }
+        switch (item.getItemId()) {
+            case (R.id.most_popular_search): {
+                getMoviesPopularRequestApi();
+                break;
             }
-        } else Toast.makeText(getBaseContext(), "Not content", Toast.LENGTH_LONG).show();
+            case (R.id.highest_rated_search): {
+                getMoviesTopRatingRequestApi();
+                break;
+            }
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -96,6 +89,16 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
         else mMoviePostersPB.setVisibility(View.GONE);
     }
 
+    private void showRecyclerView(boolean show) {
+        if (show) mMoviePostersRV.setVisibility(View.VISIBLE);
+        else mMoviePostersRV.setVisibility(View.GONE);
+    }
+
+    private void showErrorMessage(boolean show) {
+        if (show) mErrorApiTV.setVisibility(View.VISIBLE);
+        else mErrorApiTV.setVisibility(View.GONE);
+    }
+
     private void setRecyclerView(List<Result> moviePosterList) {
         mAdapter = new MoviePosterAdapter(moviePosterList, this);
         mMoviePostersRV.setAdapter(mAdapter);
@@ -105,24 +108,62 @@ public final class MainActivity extends AppCompatActivity implements MoviePoster
         mAdapter.setWeatherData(moviePosterList);
     }
 
-    private void getRequestApi() {
+    private void getMoviesPopularRequestApi() {
         showProgressBar(true);
-        mRequestToApiMovieDB.getMoviePostersRequest()
+        showErrorMessage(false);
+        mRequestToApiMovieDB.getMoviePostersPopularRequest()
                 .enqueue(new Callback<PopularMovieModel>() {
                     @Override
                     public void onResponse(Call<PopularMovieModel> call, Response<PopularMovieModel> response) {
                         if (response.body() != null) {
                             mMoviePosterList = response.body().getResults();
-                            setRecyclerView(mMoviePosterList);
+                            if (mAdapter == null) {
+                                setRecyclerView(mMoviePosterList);
+                            } else {
+                                onPostExecute(mMoviePosterList);
+                            }
+                            showRecyclerView(true);
                         } else {
-                            Toast.makeText(getBaseContext(), "Not content", Toast.LENGTH_LONG).show();
+                            showRecyclerView(false);
+                            showErrorMessage(true);
                         }
                         showProgressBar(false);
                     }
 
                     @Override
                     public void onFailure(Call<PopularMovieModel> call, Throwable t) {
-                        Toast.makeText(getBaseContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(getBaseContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                        showRecyclerView(false);
+                        showErrorMessage(true);
+                        showProgressBar(false);
+                    }
+                });
+    }
+
+    private void getMoviesTopRatingRequestApi() {
+        showProgressBar(true);
+        showErrorMessage(false);
+        mRequestToApiMovieDB.getMoviePostersTopRatedRequest()
+                .enqueue(new Callback<PopularMovieModel>() {
+                    @Override
+                    public void onResponse(Call<PopularMovieModel> call, Response<PopularMovieModel> response) {
+                        if (response.body() != null) {
+                            mMoviePosterList = response.body().getResults();
+                            setRecyclerView(mMoviePosterList);
+                            onPostExecute(mMoviePosterList);
+                            showRecyclerView(true);
+                        } else {
+                            showRecyclerView(false);
+                            showErrorMessage(true);
+                        }
+                        showProgressBar(false);
+                    }
+
+                    @Override
+                    public void onFailure(Call<PopularMovieModel> call, Throwable t) {
+                        Toast.makeText(getBaseContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                        showRecyclerView(false);
+                        showErrorMessage(true);
                         showProgressBar(false);
                     }
                 });

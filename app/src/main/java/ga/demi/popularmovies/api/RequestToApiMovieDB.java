@@ -13,13 +13,6 @@ public final class RequestToApiMovieDB {
     private static RequestToApiMovieDB mInstanceRequestToApi;
     private Retrofit mRetrofit;
 
-    private RequestToApiMovieDB() {
-        mRetrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-    }
-
     public static RequestToApiMovieDB getInstanceRequestToApi() {
         if (mInstanceRequestToApi == null) {
             mInstanceRequestToApi = new RequestToApiMovieDB();
@@ -27,7 +20,18 @@ public final class RequestToApiMovieDB {
         return mInstanceRequestToApi;
     }
 
-    public Call<PopularMovieModel> getMoviePostersRequest() {
-        return mRetrofit.create(IMoviePostersRequest.class).getMoviesPosters(API_KEY);
+    private RequestToApiMovieDB() {
+        mRetrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+
+    public Call<PopularMovieModel> getMoviePostersPopularRequest() {
+        return mRetrofit.create(IMoviePostersRequest.class).getMoviesPostersPopular(API_KEY);
+    }
+
+    public Call<PopularMovieModel> getMoviePostersTopRatedRequest() {
+        return mRetrofit.create(IMoviePostersRequest.class).getMoviesPostersTopRated(API_KEY);
     }
 }

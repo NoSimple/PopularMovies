@@ -7,5 +7,8 @@ import retrofit2.http.Query;
 
 public interface IMoviePostersRequest {
     @GET("popular/")
-    Call<PopularMovieModel> getMoviesPosters(@Query("api_key") String key);
+    Call<PopularMovieModel> getMoviesPostersPopular(@Query("api_key") String key);
+
+    @GET("top_rated/")
+    Call<PopularMovieModel> getMoviesPostersTopRated(@Query("api_key") String key);
 }
